@@ -27,33 +27,34 @@ fi
 ASSET="duster-${OS}-${ARCH}.tar.gz"
 URL="https://github.com/${REPO}/releases/latest/download/${ASSET}"
 
-# Determine install directory
-if [ -w "/usr/local/bin" ]; then
-  INSTALL_DIR="/usr/local/bin"
-  USE_SUDO=""
-elif command -v sudo >/dev/null 2>&1; then
-  INSTALL_DIR="/usr/local/bin"
-  USE_SUDO="sudo"
-else
-  INSTALL_DIR="$HOME/.local/bin"
-  USE_SUDO=""
-  mkdir -p "$INSTALL_DIR"
-fi
-
 echo "Downloading duster for ${OS}-${ARCH}..."
 curl -fsSL "$URL" -o /tmp/duster.tar.gz
-
-echo "Installing to ${INSTALL_DIR}..."
 tar -xzf /tmp/duster.tar.gz -C /tmp
-$USE_SUDO mv /tmp/duster "$INSTALL_DIR/duster"
-$USE_SUDO chmod +x "$INSTALL_DIR/duster"
 rm /tmp/duster.tar.gz
 
+# Try to install to /usr/local/bin, fall back to ~/.local/bin
+INSTALL_DIR=""
+
+if [ -w "/usr/local/bin" ]; then
+  INSTALL_DIR="/usr/local/bin"
+  mv /tmp/duster "$INSTALL_DIR/duster"
+elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+  # sudo available without password
+  INSTALL_DIR="/usr/local/bin"
+  sudo mv /tmp/duster "$INSTALL_DIR/duster"
+  sudo chmod +x "$INSTALL_DIR/duster"
+else
+  # Fall back to user directory
+  INSTALL_DIR="$HOME/.local/bin"
+  mkdir -p "$INSTALL_DIR"
+  mv /tmp/duster "$INSTALL_DIR/duster"
+  chmod +x "$INSTALL_DIR/duster"
+fi
+
+echo "Installed to ${INSTALL_DIR}/duster"
+
 # Check if install dir is in PATH
-if ! echo "$PATH" | grep -q "$INSTALL_DIR"; then
-  echo ""
-  echo "Adding $INSTALL_DIR to PATH..."
-  
+add_to_path() {
   SHELL_NAME=$(basename "$SHELL")
   case "$SHELL_NAME" in
     zsh)
@@ -68,22 +69,33 @@ if ! echo "$PATH" | grep -q "$INSTALL_DIR"; then
       ;;
     fish)
       PROFILE="$HOME/.config/fish/config.fish"
+      mkdir -p "$(dirname "$PROFILE")"
       ;;
     *)
       PROFILE="$HOME/.profile"
       ;;
   esac
   
-  if [ -f "$PROFILE" ]; then
+  if [ -f "$PROFILE" ] || [ "$SHELL_NAME" = "fish" ]; then
     if ! grep -q "$INSTALL_DIR" "$PROFILE" 2>/dev/null; then
       echo "" >> "$PROFILE"
       echo "# Added by duster installer" >> "$PROFILE"
-      echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$PROFILE"
-      echo "Added to $PROFILE"
-      echo ""
-      echo "Run 'source $PROFILE' or restart your terminal to use duster."
+      if [ "$SHELL_NAME" = "fish" ]; then
+        echo "set -gx PATH \"$INSTALL_DIR\" \$PATH" >> "$PROFILE"
+      else
+        echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$PROFILE"
+      fi
+      echo "Added $INSTALL_DIR to PATH in $PROFILE"
     fi
   fi
+}
+
+if ! echo "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_DIR"; then
+  echo ""
+  add_to_path
+  echo ""
+  echo "Restart your terminal or run:"
+  echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
 fi
 
 echo ""
