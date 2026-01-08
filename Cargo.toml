@@ -1,0 +1,27 @@
+[package]
+name = "duster"
+version = "0.1.0"
+edition = "2021"
+description = "A developer-focused CLI tool to clean up unused files and free disk space"
+license = "MIT"
+repository = "https://github.com/YOUR_USERNAME/duster"
+keywords = ["cli", "disk", "cleanup", "cache", "node_modules"]
+categories = ["command-line-utilities"]
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+walkdir = "2"
+indicatif = { version = "0.17", features = ["rayon"] }
+dialoguer = { version = "0.11", features = ["fuzzy-select"] }
+console = "0.15"
+colored = "2"
+bytesize = "1"
+blake3 = "1"
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+rayon = "1"
+ctrlc = "3"
