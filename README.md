@@ -5,7 +5,12 @@ Disk cleanup CLI for developers. Finds and removes build artifacts, caches, and 
 ## Install
 
 ```bash
-cargo install --path .
+curl -fsSL https://raw.githubusercontent.com/ericzakariasson/duster/master/install.sh | sh
+```
+
+Or with Cargo:
+```bash
+cargo install --git https://github.com/ericzakariasson/duster
 ```
 
 ## Commands
