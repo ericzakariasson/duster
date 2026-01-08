@@ -8,10 +8,20 @@ Disk cleanup CLI for developers. Finds and removes build artifacts, caches, and 
 curl -fsSL https://raw.githubusercontent.com/ericzakariasson/duster/master/install.sh | sh
 ```
 
-Or with Cargo:
+<details>
+<summary>Other install methods</summary>
+
+**With Cargo:**
 ```bash
 cargo install --git https://github.com/ericzakariasson/duster
 ```
+
+**Manual download:**
+- [macOS Apple Silicon](https://github.com/ericzakariasson/duster/releases/latest/download/duster-macos-arm64.tar.gz)
+- [macOS Intel](https://github.com/ericzakariasson/duster/releases/latest/download/duster-macos-x86_64.tar.gz)
+- [Linux x86_64](https://github.com/ericzakariasson/duster/releases/latest/download/duster-linux-x86_64.tar.gz)
+
+</details>
 
 ## Commands
 
