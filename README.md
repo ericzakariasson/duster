@@ -23,7 +23,29 @@ cargo install --git https://github.com/ericzakariasson/duster
 
 </details>
 
-## Commands
+## Desktop App
+
+Duster also comes with a beautiful desktop UI built with Tauri + Svelte.
+
+### Run Desktop App
+
+```bash
+cd duster-ui
+npm install
+cargo tauri dev
+```
+
+### Build Desktop App
+
+```bash
+cd duster-ui
+npm install
+cargo tauri build
+```
+
+The built app will be in `duster-ui/src-tauri/target/release/bundle/`.
+
+## CLI Commands
 
 ```bash
 duster scan              # Find cleanable files (dry-run)
@@ -89,3 +111,8 @@ excluded_paths = ["important-project/node_modules"]
 ## How Build Detection Works
 
 Build artifacts (`node_modules`, `target/`, `.gradle`, etc.) are only flagged if the parent project hasn't been modified within `--project-age` days. This protects active projects.
+
+## Tech Stack
+
+- **CLI**: Rust with clap, walkdir, rayon
+- **Desktop UI**: Tauri 2 + Svelte 5 + Vite
