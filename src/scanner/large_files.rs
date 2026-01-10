@@ -115,6 +115,15 @@ impl Scanner for LargeFilesScanner {
                 Err(_) => continue,
             };
 
+            // Use actual disk usage (blocks * 512) instead of logical size
+            // This correctly handles sparse files like VM disk images
+            #[cfg(unix)]
+            let size = {
+                use std::os::unix::fs::MetadataExt;
+                // blocks() returns 512-byte blocks on Unix
+                metadata.blocks() * 512
+            };
+            #[cfg(not(unix))]
             let size = metadata.len();
 
             // Skip files smaller than threshold
