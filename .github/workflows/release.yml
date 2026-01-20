@@ -50,11 +50,14 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
-      
+
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          body_path: CHANGELOG.md
           files: |
             duster-macos-x86_64/duster-macos-x86_64.tar.gz
             duster-macos-arm64/duster-macos-arm64.tar.gz

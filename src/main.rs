@@ -9,6 +9,7 @@ mod cleaner;
 mod cli;
 mod config;
 mod scanner;
+mod space;
 mod ui;
 
 use cli::{Cli, Command};
@@ -95,6 +96,10 @@ fn main() -> Result<()> {
             } else {
                 analyzer::print_detailed_report(&result);
             }
+        }
+
+        Command::Space(options) => {
+            space::run(&options)?;
         }
 
         Command::Config => {

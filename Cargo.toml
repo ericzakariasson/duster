@@ -1,6 +1,6 @@
 [package]
 name = "duster"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A developer-focused CLI tool to clean up unused files and free disk space"
 license = "MIT"
@@ -25,3 +25,4 @@ serde_json = "1"
 toml = "0.8"
 rayon = "1"
 ctrlc = "3"
+sysinfo = "0.31"

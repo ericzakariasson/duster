@@ -23,6 +23,9 @@ pub enum Command {
     /// Show disk usage breakdown by category
     Analyze(AnalyzeOptions),
 
+    /// Check disk space (total / free)
+    Space(SpaceOptions),
+
     /// Show or edit configuration
     Config,
 }
@@ -105,6 +108,17 @@ pub struct CleanOptions {
 pub struct AnalyzeOptions {
     #[command(flatten)]
     pub scan: ScanOptions,
+}
+
+#[derive(Parser, Debug)]
+pub struct SpaceOptions {
+    /// Path whose filesystem to report (default: home directory)
+    #[arg(long, value_name = "PATH")]
+    pub path: Option<PathBuf>,
+
+    /// Output as JSON
+    #[arg(long)]
+    pub json: bool,
 }
 
 impl ScanOptions {

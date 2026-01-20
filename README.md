@@ -30,6 +30,9 @@ duster scan              # Find cleanable files (dry-run)
 duster clean             # Delete files (with confirmation)
 duster clean -y          # Delete without confirmation
 duster analyze           # Detailed breakdown by category
+duster space             # Total / free disk space (default: home fs)
+duster space --path /tmp # For a specific path's filesystem
+duster space --json      # Machine-readable output
 duster config            # Show current settings
 ```
 
