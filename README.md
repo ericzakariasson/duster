@@ -5,7 +5,7 @@ Disk cleanup CLI for developers. Finds and removes build artifacts, caches, and 
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ericzakariasson/duster/master/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/ericzakariasson/duster/main/install.sh | sh
 ```
 
 <details>
