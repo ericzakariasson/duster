@@ -12,11 +12,11 @@ pub mod trash;
 use crate::config::Config;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 /// Represents a file that can be cleaned up
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CleanableFile {
     /// Path to the file or directory
     pub path: PathBuf,
@@ -33,7 +33,7 @@ pub struct CleanableFile {
 }
 
 /// Categories of cleanable files
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Category {
     Cache,
     Trash,
@@ -132,6 +132,7 @@ pub fn was_modified_within_days(path: &std::path::Path, days: u32) -> bool {
 }
 
 /// Aggregate scan results from multiple scanners
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ScanResult {
     pub files: Vec<CleanableFile>,
     pub errors: Vec<String>,
@@ -171,8 +172,3 @@ impl ScanResult {
     }
 }
 
-impl Default for ScanResult {
-    fn default() -> Self {
-        Self::new()
-    }
-}

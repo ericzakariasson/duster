@@ -8,6 +8,7 @@ mod analyzer;
 mod cleaner;
 mod cli;
 mod config;
+mod scan_cache;
 mod scanner;
 mod space;
 mod ui;
@@ -37,6 +38,9 @@ fn main() -> Result<()> {
                 return Ok(());
             }
 
+            // Cache result for clean to reuse if run within 5 minutes
+            let _ = scan_cache::save(&result, &options);
+
             // Print report
             if options.json {
                 analyzer::print_json_report(&result)?;
@@ -49,8 +53,14 @@ fn main() -> Result<()> {
             // Apply CLI options to config
             config.apply_cli_options(&options.scan);
 
-            // Run scan
-            let result = analyzer::run_scan(&options.scan, &config)?;
+            // Use cached scan result if a scan was run within the last 5 minutes with same options
+            let result = match scan_cache::load_if_recent_default(&options.scan) {
+                Some(cached) => {
+                    ui::print_info("Using recent scan result (scan was run within 5 minutes).");
+                    cached
+                }
+                None => analyzer::run_scan(&options.scan, &config)?,
+            };
 
             if result.files.is_empty() {
                 ui::print_info("No cleanable files found.");
