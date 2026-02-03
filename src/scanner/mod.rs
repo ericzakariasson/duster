@@ -2,6 +2,7 @@
 
 pub mod build_artifacts;
 pub mod cache;
+pub mod custom_paths;
 pub mod downloads;
 pub mod duplicates;
 pub mod large_files;

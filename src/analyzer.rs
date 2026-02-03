@@ -5,6 +5,7 @@ use crate::config::Config;
 use crate::scanner::{
     build_artifacts::{BuildArtifactsScanner, GlobalCacheScanner},
     cache::{CacheScanner, KnownCacheScanner},
+    custom_paths::CustomPathsScanner,
     downloads::DownloadsScanner,
     duplicates::DuplicatesScanner,
     large_files::LargeFilesScanner,
@@ -57,6 +58,36 @@ pub fn run_scan(options: &ScanOptions, config: &Config) -> Result<ScanResult> {
 
     if options.should_scan(ScanCategory::Old) {
         scanners.push(Box::new(OldFilesScanner::new()));
+    }
+
+    let mut custom_categories = Vec::new();
+    if options.should_scan(ScanCategory::Cache) {
+        custom_categories.push(Category::Cache);
+    }
+    if options.should_scan(ScanCategory::Trash) {
+        custom_categories.push(Category::Trash);
+    }
+    if options.should_scan(ScanCategory::Temp) {
+        custom_categories.push(Category::Temp);
+    }
+    if options.should_scan(ScanCategory::Downloads) {
+        custom_categories.push(Category::Downloads);
+    }
+    if options.should_scan(ScanCategory::Build) {
+        custom_categories.push(Category::BuildArtifact);
+    }
+    if options.should_scan(ScanCategory::Large) {
+        custom_categories.push(Category::LargeFile);
+    }
+    if options.should_scan(ScanCategory::Duplicates) {
+        custom_categories.push(Category::Duplicate);
+    }
+    if options.should_scan(ScanCategory::Old) {
+        custom_categories.push(Category::OldFile);
+    }
+
+    if !custom_categories.is_empty() {
+        scanners.push(Box::new(CustomPathsScanner::new(custom_categories)));
     }
 
     // Show progress

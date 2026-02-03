@@ -27,7 +27,7 @@ cargo install --git https://github.com/ericzakariasson/duster
 
 ```bash
 duster scan              # Find cleanable files (dry-run)
-duster clean             # Delete files (with confirmation)
+duster clean             # Select categories, then delete (with confirmation)
 duster clean -y          # Delete without confirmation
 duster analyze           # Detailed breakdown by category
 duster space             # Total / free disk space (default: home fs)
@@ -87,7 +87,23 @@ min_large_size_mb = 100
 project_recent_days = 14
 download_age_days = 30
 excluded_paths = ["important-project/node_modules"]
+custom_paths = [
+  { path = "~/Library/Application Support/Cursor Nightly", category = "cache", description = "Cursor Nightly app data" },
+  { path = "~/Library/Caches/co.anysphere.cursor.nightly", category = "cache", description = "Cursor Nightly cache" },
+  { path = "~/Library/Caches/co.anysphere.cursor.nightly.ShipIt", category = "cache", description = "Cursor Nightly updater cache" },
+  { path = "~/dev/everysphere/anyrun/target", category = "build", description = "Anyrun build artifacts" }
+]
 ```
+
+### Custom Clean Paths
+
+Use `custom_paths` to include specific directories or files that duster doesn't
+discover automatically. Each entry supports:
+
+- `path`: Absolute or `~/`-relative path.
+- `category`: One of `cache`, `build`, `trash`, `temp`, `downloads`, `large`, `duplicates`, `old`.
+- `description`: Optional text shown in reports.
+- `min_size_mb`: Optional size threshold (defaults to 1MB).
 
 ## How Build Detection Works
 

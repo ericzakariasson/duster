@@ -6,6 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::cli::ScanOptions;
+use crate::scanner::Category;
 
 /// Application configuration with sensible defaults
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -34,9 +35,82 @@ pub struct Config {
     #[serde(default)]
     pub cache_paths: Vec<String>,
 
+    /// Custom cleanable paths with categories and optional metadata
+    #[serde(default)]
+    pub custom_paths: Vec<CustomCleanPath>,
+
     /// Base path for scanning (default: home directory)
     #[serde(skip)]
     pub base_path: Option<PathBuf>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CustomCleanPath {
+    /// Path to clean (absolute or ~/ relative)
+    pub path: String,
+
+    /// Category for this path (cache, build, etc.)
+    #[serde(default)]
+    pub category: CustomPathCategory,
+
+    /// Optional reason shown in reports
+    #[serde(default)]
+    pub description: Option<String>,
+
+    /// Minimum size (MB) before showing this entry (default: 1MB)
+    #[serde(default)]
+    pub min_size_mb: Option<u64>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CustomPathCategory {
+    Cache,
+    Trash,
+    Temp,
+    Downloads,
+    Build,
+    Large,
+    Duplicates,
+    Old,
+    #[serde(other)]
+    Unknown,
+}
+
+impl Default for CustomPathCategory {
+    fn default() -> Self {
+        Self::Cache
+    }
+}
+
+impl CustomPathCategory {
+    pub fn to_category(self) -> Option<Category> {
+        match self {
+            CustomPathCategory::Cache => Some(Category::Cache),
+            CustomPathCategory::Trash => Some(Category::Trash),
+            CustomPathCategory::Temp => Some(Category::Temp),
+            CustomPathCategory::Downloads => Some(Category::Downloads),
+            CustomPathCategory::Build => Some(Category::BuildArtifact),
+            CustomPathCategory::Large => Some(Category::LargeFile),
+            CustomPathCategory::Duplicates => Some(Category::Duplicate),
+            CustomPathCategory::Old => Some(Category::OldFile),
+            CustomPathCategory::Unknown => None,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            CustomPathCategory::Cache => "cache",
+            CustomPathCategory::Trash => "trash",
+            CustomPathCategory::Temp => "temp",
+            CustomPathCategory::Downloads => "downloads",
+            CustomPathCategory::Build => "build",
+            CustomPathCategory::Large => "large",
+            CustomPathCategory::Duplicates => "duplicates",
+            CustomPathCategory::Old => "old",
+            CustomPathCategory::Unknown => "unknown",
+        }
+    }
 }
 
 fn default_min_age_days() -> u32 {
@@ -64,6 +138,7 @@ impl Default for Config {
             download_age_days: default_download_age_days(),
             excluded_paths: Vec::new(),
             cache_paths: Vec::new(),
+            custom_paths: Vec::new(),
             base_path: None,
         }
     }
@@ -156,17 +231,32 @@ impl Config {
     /// Check if a path should be excluded
     pub fn is_excluded(&self, path: &std::path::Path) -> bool {
         let path_str = path.to_string_lossy();
+        let home_dir = dirs::home_dir();
         self.excluded_paths.iter().any(|pattern| {
+            // Expand ~ prefix to home directory for matching
+            let expanded = if let Some(stripped) = pattern.strip_prefix("~/") {
+                home_dir
+                    .as_ref()
+                    .map(|h| h.join(stripped).to_string_lossy().into_owned())
+            } else if pattern == "~" {
+                home_dir
+                    .as_ref()
+                    .map(|h| h.to_string_lossy().into_owned())
+            } else {
+                None
+            };
+            let effective_pattern = expanded.as_deref().unwrap_or(pattern);
+
             // Simple glob-style matching
-            if pattern.contains('*') {
+            if effective_pattern.contains('*') {
                 // Convert glob pattern to simple matching
-                let parts: Vec<&str> = pattern.split('*').collect();
+                let parts: Vec<&str> = effective_pattern.split('*').collect();
                 if parts.len() == 2 {
                     let (prefix, suffix) = (parts[0], parts[1]);
                     return path_str.starts_with(prefix) && path_str.ends_with(suffix);
                 }
             }
-            path_str.contains(pattern)
+            path_str.contains(effective_pattern)
         })
     }
 }
@@ -218,5 +308,31 @@ mod tests {
         assert_eq!(config.min_age_days, 30);
         assert_eq!(config.min_large_size_mb, 100);
         assert_eq!(config.project_recent_days, 14);
+    }
+
+    #[test]
+    fn test_is_excluded_plain_pattern() {
+        let mut config = Config::default();
+        config.excluded_paths = vec![".local/share/cursor-agent".to_string()];
+        let path = PathBuf::from("/Users/test/.local/share/cursor-agent/versions/node");
+        assert!(config.is_excluded(&path));
+    }
+
+    #[test]
+    fn test_is_excluded_tilde_expansion() {
+        let mut config = Config::default();
+        config.excluded_paths = vec!["~/.local/share/cursor-agent".to_string()];
+        if let Some(home) = dirs::home_dir() {
+            let path = home.join(".local/share/cursor-agent/versions/node");
+            assert!(config.is_excluded(&path));
+        }
+    }
+
+    #[test]
+    fn test_is_excluded_glob() {
+        let mut config = Config::default();
+        config.excluded_paths = vec!["/tmp/test*artifact".to_string()];
+        let path = PathBuf::from("/tmp/test-build-artifact");
+        assert!(config.is_excluded(&path));
     }
 }
