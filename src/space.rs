@@ -62,13 +62,69 @@ fn find_disk_for_path(target: &Path) -> Result<(u64, u64, PathBuf)> {
 
 fn print_human(total: u64, free: u64, mount_point: &Path) {
     ui::print_header("Disk space");
+    let used = total.saturating_sub(free);
+    let used_ratio = used_ratio(total, free);
+    let used_percent = used_ratio * 100.0;
+    let free_percent = (1.0 - used_ratio) * 100.0;
+
+    let used_text = format!(
+        "Used: {} ({used_percent:.1}%)",
+        ui::format_size(used)
+    );
+    let used_text = if used_ratio >= 0.90 {
+        used_text.red()
+    } else if used_ratio >= 0.75 {
+        used_text.yellow()
+    } else {
+        used_text.green()
+    };
+
     println!(
-        "{}  |  {}",
+        "{}  |  {}  |  {}",
         format!("Total: {}", ui::format_size(total)).yellow(),
-        format!("Free: {}", ui::format_size(free)).green()
+        used_text,
+        format!("Free: {} ({free_percent:.1}%)", ui::format_size(free)).green()
+    );
+
+    let bar_width = 30;
+    let (filled, empty) = bar_segments(used_ratio, bar_width);
+    let filled_str = "#".repeat(filled);
+    let empty_str = "-".repeat(empty);
+    let filled_str = if used_ratio >= 0.90 {
+        filled_str.red()
+    } else if used_ratio >= 0.75 {
+        filled_str.yellow()
+    } else {
+        filled_str.green()
+    };
+
+    println!();
+    println!(
+        "{} [{}{}] {}",
+        "Usage:".dimmed(),
+        filled_str,
+        empty_str.dimmed(),
+        format!("{used_percent:.1}% used").bold()
     );
     println!();
     println!("{} {}", "Mount point:".dimmed(), mount_point.display());
+}
+
+fn used_ratio(total: u64, free: u64) -> f64 {
+    if total == 0 {
+        return 0.0;
+    }
+    let used = total.saturating_sub(free);
+    (used as f64 / total as f64).clamp(0.0, 1.0)
+}
+
+fn bar_segments(used_ratio: f64, width: usize) -> (usize, usize) {
+    if width == 0 {
+        return (0, 0);
+    }
+    let ratio = used_ratio.clamp(0.0, 1.0);
+    let filled = ((ratio * width as f64).round() as usize).min(width);
+    (filled, width - filled)
 }
 
 fn print_json(total: u64, free: u64, mount_point: &Path) -> Result<()> {
@@ -81,4 +137,27 @@ fn print_json(total: u64, free: u64, mount_point: &Path) -> Result<()> {
     });
     println!("{}", serde_json::to_string_pretty(&output)?);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn used_ratio_is_clamped() {
+        assert_eq!(used_ratio(0, 0), 0.0);
+        assert_eq!(used_ratio(100, 150), 0.0);
+        assert_eq!(used_ratio(100, 0), 1.0);
+        assert!((used_ratio(100, 25) - 0.75).abs() < 1e-9);
+    }
+
+    #[test]
+    fn bar_segments_handles_width_and_rounding() {
+        assert_eq!(bar_segments(0.0, 10), (0, 10));
+        assert_eq!(bar_segments(1.0, 10), (10, 0));
+        assert_eq!(bar_segments(-1.0, 10), (0, 10));
+        assert_eq!(bar_segments(2.0, 10), (10, 0));
+        assert_eq!(bar_segments(0.75, 20), (15, 5));
+        assert_eq!(bar_segments(0.0, 0), (0, 0));
+    }
 }
