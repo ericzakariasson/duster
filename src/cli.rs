@@ -26,6 +26,9 @@ pub enum Command {
     /// Check disk space (total / free)
     Space(SpaceOptions),
 
+    /// Interactive TUI to visualize disk usage
+    Tui(TuiOptions),
+
     /// Show or edit configuration
     Config,
 }
@@ -119,6 +122,25 @@ pub struct SpaceOptions {
     /// Output as JSON
     #[arg(long)]
     pub json: bool,
+}
+
+#[derive(Parser, Debug)]
+pub struct TuiOptions {
+    /// Path to browse (default: home directory)
+    #[arg(long, value_name = "PATH")]
+    pub path: Option<PathBuf>,
+
+    /// Print a one-shot report instead of starting the interactive TUI
+    #[arg(long)]
+    pub plain: bool,
+
+    /// Show hidden files (dotfiles)
+    #[arg(long)]
+    pub hidden: bool,
+
+    /// Maximum number of entries to display (default: 50)
+    #[arg(long, value_name = "N", default_value_t = 50)]
+    pub limit: usize,
 }
 
 impl ScanOptions {

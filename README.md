@@ -33,8 +33,18 @@ duster analyze           # Detailed breakdown by category
 duster space             # Total / free disk space (default: home fs)
 duster space --path /tmp # For a specific path's filesystem
 duster space --json      # Machine-readable output
+duster tui               # Interactive disk usage browser (TUI)
 duster config            # Show current settings
 ```
+
+### TUI controls
+
+- `↑/↓` or `j/k`: move selection
+- `Enter`: open directory
+- `Backspace`: go to parent directory
+- `r`: refresh/rescan
+- `h`: toggle hidden files
+- `q`: quit
 
 ## Categories
 

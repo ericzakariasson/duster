@@ -1,17 +1,20 @@
 //! Disk space reporting (total / free) for a given path's filesystem
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use colored::Colorize;
-use std::path::{Path, PathBuf};
-use sysinfo::Disks;
+use std::path::Path;
 
 use crate::cli::SpaceOptions;
+use crate::disk;
 use crate::ui;
 
 /// Run the space command: resolve path, find disk, print total/free.
 pub fn run(options: &SpaceOptions) -> Result<()> {
-    let path = resolve_target_path(options)?;
-    let (total, free, mount_point) = find_disk_for_path(&path)?;
+    let path = disk::resolve_target_path(options.path.as_ref())?;
+    let space = disk::fs_space_for_path(&path)?;
+    let total = space.total_bytes;
+    let free = space.free_bytes;
+    let mount_point = space.mount_point;
 
     if options.json {
         print_json(total, free, &mount_point)?;
@@ -20,44 +23,6 @@ pub fn run(options: &SpaceOptions) -> Result<()> {
     }
 
     Ok(())
-}
-
-fn resolve_target_path(options: &SpaceOptions) -> Result<PathBuf> {
-    let path = if let Some(ref p) = options.path {
-        p.clone()
-    } else if let Some(home) = dirs::home_dir() {
-        home
-    } else {
-        std::env::current_dir().context("Could not determine current directory")?
-    };
-
-    let canonical = path
-        .canonicalize()
-        .with_context(|| format!("Path does not exist: {}", path.display()))?;
-    Ok(canonical)
-}
-
-fn find_disk_for_path(target: &Path) -> Result<(u64, u64, PathBuf)> {
-    let disks = Disks::new_with_refreshed_list();
-
-    let mut matching: Vec<_> = disks
-        .list()
-        .iter()
-        .filter(|disk| target.starts_with(disk.mount_point()))
-        .map(|disk| (disk.mount_point().to_path_buf(), disk))
-        .collect();
-
-    // Longest mount point first (handles nested mounts like / vs /home)
-    matching.sort_by(|a, b| b.0.as_os_str().len().cmp(&a.0.as_os_str().len()));
-
-    let (mount_point, disk) = matching
-        .into_iter()
-        .next()
-        .context("No disk found containing the given path")?;
-
-    let total = disk.total_space();
-    let free = disk.available_space();
-    Ok((total, free, mount_point))
 }
 
 fn print_human(total: u64, free: u64, mount_point: &Path) {

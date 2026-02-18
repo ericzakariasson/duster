@@ -8,9 +8,12 @@ mod analyzer;
 mod cleaner;
 mod cli;
 mod config;
+mod disk;
+mod disk_usage;
 mod scan_cache;
 mod scanner;
 mod space;
+mod tui_disk;
 mod ui;
 
 use cli::{Cli, Command};
@@ -126,6 +129,10 @@ fn main() -> Result<()> {
 
         Command::Space(options) => {
             space::run(&options)?;
+        }
+
+        Command::Tui(options) => {
+            tui_disk::run(&options)?;
         }
 
         Command::Config => {
