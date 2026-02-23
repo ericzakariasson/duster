@@ -26,6 +26,9 @@ pub enum Command {
     /// Check disk space (total / free)
     Space(SpaceOptions),
 
+    /// Interactive TUI to visualize cleanable disk usage
+    Tui(TuiOptions),
+
     /// Show or edit configuration
     Config,
 }
@@ -119,6 +122,12 @@ pub struct SpaceOptions {
     /// Output as JSON
     #[arg(long)]
     pub json: bool,
+}
+
+#[derive(Parser, Debug, Clone)]
+pub struct TuiOptions {
+    #[command(flatten)]
+    pub scan: ScanOptions,
 }
 
 impl ScanOptions {
