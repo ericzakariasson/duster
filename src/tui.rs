@@ -265,7 +265,7 @@ fn render_category_list(frame: &mut Frame<'_>, app: &App, area: Rect) {
 
                 ListItem::new(Line::from(label))
             })
-            .collect::<Vec<ListItem>>();
+            .collect::<Vec<ListItem>>()
     };
 
     let list = List::new(items)
