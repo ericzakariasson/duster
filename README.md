@@ -33,6 +33,7 @@ duster analyze           # Detailed breakdown by category
 duster space             # Total / free disk space (default: home fs)
 duster space --path /tmp # For a specific path's filesystem
 duster space --json      # Machine-readable output
+duster tui               # Interactive TUI to visualize cleanable disk usage
 duster config            # Show current settings
 ```
 
@@ -76,6 +77,11 @@ duster scan --large --min-size 500MB
 # Everything as JSON
 duster scan --json
 ```
+
+## TUI Mode
+
+Run `duster tui` for an interactive terminal visualization of cleanable disk space by category.
+Use `up/down` (or `j/k`) to move between categories and `q` to exit.
 
 ## Config File
 

@@ -11,6 +11,7 @@ mod config;
 mod scan_cache;
 mod scanner;
 mod space;
+mod tui;
 mod ui;
 
 use cli::{Cli, Command};
@@ -128,6 +129,21 @@ fn main() -> Result<()> {
             space::run(&options)?;
         }
 
+        Command::Tui(options) => {
+            // Apply CLI options to config
+            config.apply_cli_options(&options.scan);
+
+            // Run scan
+            let result = analyzer::run_scan(&options.scan, &config)?;
+
+            // Allow machine-readable output for scripting parity with scan/analyze
+            if options.scan.json {
+                analyzer::print_json_report(&result)?;
+            } else {
+                tui::run(&result, options.scan.path.as_deref())?;
+            }
+        }
+
         Command::Config => {
             show_config(&config)?;
         }
@@ -191,11 +207,7 @@ fn show_config(config: &Config) -> Result<()> {
     println!();
     if let Some(config_path) = Config::config_path() {
         if config_path.exists() {
-            println!(
-                "{} {}",
-                "Config file:".dimmed(),
-                config_path.display()
-            );
+            println!("{} {}", "Config file:".dimmed(), config_path.display());
         } else {
             println!(
                 "{} {} (not created yet)",
