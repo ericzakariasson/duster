@@ -39,6 +39,14 @@ pub struct Config {
     #[serde(default)]
     pub custom_paths: Vec<CustomCleanPath>,
 
+    /// File extensions to ignore during scanning
+    #[serde(default)]
+    pub ignored_extensions: Vec<String>,
+
+    /// When set, only include files with these extensions
+    #[serde(default)]
+    pub only_extensions: Vec<String>,
+
     /// Base path for scanning (default: home directory)
     #[serde(skip)]
     pub base_path: Option<PathBuf>,
@@ -139,6 +147,8 @@ impl Default for Config {
             excluded_paths: Vec::new(),
             cache_paths: Vec::new(),
             custom_paths: Vec::new(),
+            ignored_extensions: Vec::new(),
+            only_extensions: Vec::new(),
             base_path: None,
         }
     }
@@ -213,6 +223,22 @@ impl Config {
                 self.excluded_paths.push(exclude.clone());
             }
         }
+
+        // Add CLI ignored extensions
+        for ext in &options.ignore_ext {
+            let ext_lower = ext.to_lowercase();
+            if !self.ignored_extensions.contains(&ext_lower) {
+                self.ignored_extensions.push(ext_lower);
+            }
+        }
+
+        // Add CLI only-ext filters
+        for ext in &options.only_ext {
+            let ext_lower = ext.to_lowercase();
+            if !self.only_extensions.contains(&ext_lower) {
+                self.only_extensions.push(ext_lower);
+            }
+        }
     }
 
     /// Get the base path for scanning
@@ -226,6 +252,29 @@ impl Config {
     /// Get minimum large file size in bytes
     pub fn min_large_size_bytes(&self) -> u64 {
         self.min_large_size_mb * 1024 * 1024
+    }
+
+    /// Check if a file should be skipped based on extension filters.
+    /// Handles both --ignore-ext (exclusion) and --only-ext (inclusion) logic.
+    pub fn should_skip_extension(&self, path: &std::path::Path) -> bool {
+        if self.ignored_extensions.is_empty() && self.only_extensions.is_empty() {
+            return false;
+        }
+
+        let ext = match path.extension() {
+            Some(e) => e.to_string_lossy().to_lowercase(),
+            None => return !self.only_extensions.is_empty(),
+        };
+
+        if self.ignored_extensions.iter().any(|ignored| ignored == &ext) {
+            return true;
+        }
+
+        if !self.only_extensions.is_empty() {
+            return self.only_extensions.iter().any(|only| only == &ext);
+        }
+
+        false
     }
 
     /// Check if a path should be excluded
