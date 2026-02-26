@@ -348,7 +348,7 @@ fn parse_size_mb(s: &str) -> Option<u64> {
 }
 
 fn normalize_extension(ext: &str) -> String {
-    ext.trim_start_matches('.').to_lowercase()
+    ext.trim().trim_start_matches('.').to_lowercase()
 }
 
 #[cfg(test)]
@@ -370,6 +370,12 @@ mod tests {
         assert_eq!(config.min_age_days, 30);
         assert_eq!(config.min_large_size_mb, 100);
         assert_eq!(config.project_recent_days, 14);
+    }
+
+    #[test]
+    fn test_normalize_extension_trims_whitespace() {
+        assert_eq!(normalize_extension(" iso"), "iso");
+        assert_eq!(normalize_extension(" .DMG "), "dmg");
     }
 
     #[test]
