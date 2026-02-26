@@ -174,8 +174,17 @@ impl Config {
         let contents = fs::read_to_string(&config_path)
             .with_context(|| format!("Failed to read config file: {}", config_path.display()))?;
 
-        let config: Config = toml::from_str(&contents)
+        let mut config: Config = toml::from_str(&contents)
             .with_context(|| format!("Failed to parse config file: {}", config_path.display()))?;
+
+        config
+            .ignored_extensions
+            .iter_mut()
+            .for_each(|ext| *ext = ext.to_lowercase());
+        config
+            .only_extensions
+            .iter_mut()
+            .for_each(|ext| *ext = ext.to_lowercase());
 
         Ok(config)
     }
@@ -271,7 +280,7 @@ impl Config {
         }
 
         if !self.only_extensions.is_empty() {
-            return self.only_extensions.iter().any(|only| only == &ext);
+            return !self.only_extensions.iter().any(|only| only == &ext);
         }
 
         false
