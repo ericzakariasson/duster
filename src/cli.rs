@@ -89,6 +89,10 @@ pub struct ScanOptions {
     #[arg(long, value_name = "PATTERN")]
     pub exclude: Vec<String>,
 
+    /// Ignore files with these extensions (comma-separated, e.g. "dmg,iso,pkg")
+    #[arg(long, value_name = "EXTS", value_delimiter = ',')]
+    pub ignore_ext: Vec<String>,
+
     /// Output results as JSON
     #[arg(long)]
     pub json: bool,
