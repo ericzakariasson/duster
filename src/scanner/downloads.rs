@@ -60,6 +60,11 @@ impl Scanner for DownloadsScanner {
                 continue;
             }
 
+            // Extension filters only apply to files.
+            if entry.file_type().is_file() && config.should_skip_extension(&path) {
+                continue;
+            }
+
             // Skip hidden files
             if let Some(name) = path.file_name() {
                 if name.to_string_lossy().starts_with('.') {

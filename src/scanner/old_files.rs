@@ -115,6 +115,11 @@ impl Scanner for OldFilesScanner {
                     continue;
                 }
 
+                // Skip based on extension filters
+                if config.should_skip_extension(path) {
+                    continue;
+                }
+
                 // Skip hidden files
                 if let Some(name) = path.file_name() {
                     if name.to_string_lossy().starts_with('.') {
