@@ -26,8 +26,12 @@ fn options_fingerprint(options: &ScanOptions) -> String {
         .unwrap_or_default();
     let mut exclude = options.exclude.clone();
     exclude.sort();
+    let mut ignore_ext = options.ignore_ext.clone();
+    ignore_ext.sort();
+    let mut only_ext = options.only_ext.clone();
+    only_ext.sort();
     format!(
-        "path={} all={} cache={} trash={} temp={} downloads={} build={} large={} duplicates={} old={} min_age={:?} min_size={:?} project_age={:?} exclude={:?}",
+        "path={} all={} cache={} trash={} temp={} downloads={} build={} large={} duplicates={} old={} min_age={:?} min_size={:?} project_age={:?} exclude={:?} ignore_ext={:?} only_ext={:?}",
         path,
         options.all,
         options.cache,
@@ -42,6 +46,8 @@ fn options_fingerprint(options: &ScanOptions) -> String {
         options.min_size,
         options.project_age,
         exclude,
+        ignore_ext,
+        only_ext,
     )
 }
 
