@@ -180,11 +180,11 @@ impl Config {
         config
             .ignored_extensions
             .iter_mut()
-            .for_each(|ext| *ext = ext.to_lowercase());
+            .for_each(|ext| *ext = normalize_extension(ext));
         config
             .only_extensions
             .iter_mut()
-            .for_each(|ext| *ext = ext.to_lowercase());
+            .for_each(|ext| *ext = normalize_extension(ext));
 
         Ok(config)
     }
@@ -235,7 +235,7 @@ impl Config {
 
         // Add CLI ignored extensions
         for ext in &options.ignore_ext {
-            let ext_lower = ext.to_lowercase();
+            let ext_lower = normalize_extension(ext);
             if !self.ignored_extensions.contains(&ext_lower) {
                 self.ignored_extensions.push(ext_lower);
             }
@@ -243,7 +243,7 @@ impl Config {
 
         // Add CLI only-ext filters
         for ext in &options.only_ext {
-            let ext_lower = ext.to_lowercase();
+            let ext_lower = normalize_extension(ext);
             if !self.only_extensions.contains(&ext_lower) {
                 self.only_extensions.push(ext_lower);
             }
@@ -345,6 +345,10 @@ fn parse_size_mb(s: &str) -> Option<u64> {
 
     // Try to parse as plain number (assume MB)
     s.parse::<u64>().ok()
+}
+
+fn normalize_extension(ext: &str) -> String {
+    ext.trim_start_matches('.').to_lowercase()
 }
 
 #[cfg(test)]

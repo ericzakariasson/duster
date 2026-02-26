@@ -60,8 +60,8 @@ impl Scanner for DownloadsScanner {
                 continue;
             }
 
-            // Skip based on extension filters
-            if config.should_skip_extension(&path) {
+            // Extension filters only apply to files.
+            if entry.file_type().is_file() && config.should_skip_extension(&path) {
                 continue;
             }
 
